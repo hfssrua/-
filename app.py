@@ -2,24 +2,27 @@ import streamlit as st
 import base64
 import json
 import re
+import os
 from datetime import datetime
 from openai import OpenAI
 import random
 
-# ---------- 配置（使用 Streamlit Secrets 更安全）----------
-API_KEY = st.secrets["API_KEY"]
-MODEL_ID = st.secrets["MODEL_ID"]
-# ---------- 初始化 OpenAI 客户端 ----------
+# ============================================
+# 直接在这里填写你的 API Key 和接入点 ID
+# ============================================
+API_KEY = "	
+ark-e54efdad-caf2-44f7-93ae-44d76ea2de46-06f1f"        # 替换成你的 key，例如 ark-xxxx
+MODEL_ID = "ep-20260530232836-ndltt"       # 替换成你的接入点，例如 ep-xxxx
+# ============================================
+
 client = OpenAI(
     base_url="https://ark.cn-beijing.volces.com/api/v3",
     api_key=API_KEY,
 )
 
-# ---------- 页面设置 ----------
 st.set_page_config(page_title="一日三餐日记", page_icon="🍽️")
 st.title("🍽️ 一日三餐日记")
 
-# ---------- JSON 文件存储 ----------
 DATA_FILE = "meals.json"
 
 def load_meals():
@@ -37,7 +40,6 @@ if "meals" not in st.session_state:
 if "pending_meal" not in st.session_state:
     st.session_state.pending_meal = None
 
-# ---------- 识别函数 ----------
 def recognize_food(image_bytes):
     img_b64 = base64.b64encode(image_bytes).decode("utf-8")
     prompt = (
@@ -71,7 +73,6 @@ def recognize_food(image_bytes):
         })
     return result
 
-# ---------- 界面 ----------
 tab1, tab2 = st.tabs(["📷 拍照识别", "📋 历史记录"])
 
 with tab1:
@@ -84,11 +85,10 @@ with tab1:
             with st.spinner("正在识别..."):
                 try:
                     foods = recognize_food(image_bytes)
-                    # 将照片转 base64 字符串存储
                     img_b64_str = base64.b64encode(image_bytes).decode("utf-8")
                     st.session_state.pending_meal = {
                         "foods": foods,
-                        "image": img_b64_str,   # 存 base64 字符串
+                        "image": img_b64_str,
                         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     }
                     total_cal = sum(f["calories"] for f in foods)
@@ -99,7 +99,6 @@ with tab1:
                 except Exception as e:
                     st.error(f"识别失败：{e}")
 
-    # 评分部分
     if st.session_state.pending_meal is not None:
         st.subheader("给这顿饭打分")
         rating = st.slider("评分", 1, 10, 7)
@@ -126,7 +125,6 @@ with tab2:
             st.write("食物：")
             for f in meal['foods']:
                 st.write(f"- {f['name']}：{f['calories']}千卡")
-            # 从 base64 解码显示图片
             try:
                 img_bytes = base64.b64decode(meal['image'])
                 st.image(img_bytes, caption="当时照片", use_column_width=True)
