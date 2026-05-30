@@ -7,8 +7,8 @@ from openai import OpenAI
 import random
 
 # ---------- 配置（使用 Streamlit Secrets 更安全）----------
-API_KEY = st.secrets["API_KEY"]
-MODEL_ID = st.secrets["MODEL_ID"]
+API_KEY = st.secrets["ark-e54efdad-caf2-44f7-93ae-44d76ea2de46-06f1f"]
+MODEL_ID = st.secrets["ep-20260530232836-ndltt"]
 
 # ---------- 初始化 OpenAI 客户端 ----------
 client = OpenAI(
