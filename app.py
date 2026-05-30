@@ -4,14 +4,11 @@ import json
 import re
 from datetime import datetime
 from openai import OpenAI
-from PIL import Image
-import io
-import os
 import random
 
-# ---------- 配置 ----------
-API_KEY = "ark-e54efdad-caf2-44f7-93ae-44d76ea2de46-06f1f"          # 替换
-MODEL_ID = "ep-20260530232836-ndltt"    # 替换
+# ---------- 配置（使用 Streamlit Secrets 更安全）----------
+API_KEY = st.secrets["API_KEY"]
+MODEL_ID = st.secrets["MODEL_ID"]
 
 # ---------- 初始化 OpenAI 客户端 ----------
 client = OpenAI(
@@ -23,7 +20,7 @@ client = OpenAI(
 st.set_page_config(page_title="一日三餐日记", page_icon="🍽️")
 st.title("🍽️ 一日三餐日记")
 
-# ---------- 本地文件存储（简单用 JSON 文件模拟数据库） ----------
+# ---------- JSON 文件存储 ----------
 DATA_FILE = "meals.json"
 
 def load_meals():
@@ -39,7 +36,7 @@ def save_meals(meals):
 if "meals" not in st.session_state:
     st.session_state.meals = load_meals()
 if "pending_meal" not in st.session_state:
-    st.session_state.pending_meal = None  # 暂存刚识别的餐食等待评分
+    st.session_state.pending_meal = None
 
 # ---------- 识别函数 ----------
 def recognize_food(image_bytes):
@@ -75,7 +72,7 @@ def recognize_food(image_bytes):
         })
     return result
 
-# ---------- 界面布局 ----------
+# ---------- 界面 ----------
 tab1, tab2 = st.tabs(["📷 拍照识别", "📋 历史记录"])
 
 with tab1:
@@ -88,9 +85,11 @@ with tab1:
             with st.spinner("正在识别..."):
                 try:
                     foods = recognize_food(image_bytes)
+                    # 将照片转 base64 字符串存储
+                    img_b64_str = base64.b64encode(image_bytes).decode("utf-8")
                     st.session_state.pending_meal = {
                         "foods": foods,
-                        "image": image_bytes,
+                        "image": img_b64_str,   # 存 base64 字符串
                         "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     }
                     total_cal = sum(f["calories"] for f in foods)
@@ -128,7 +127,12 @@ with tab2:
             st.write("食物：")
             for f in meal['foods']:
                 st.write(f"- {f['name']}：{f['calories']}千卡")
-            st.image(meal['image'], caption="当时照片", use_column_width=True)
+            # 从 base64 解码显示图片
+            try:
+                img_bytes = base64.b64decode(meal['image'])
+                st.image(img_bytes, caption="当时照片", use_column_width=True)
+            except:
+                st.info("图片无法显示")
         else:
             st.info("暂无高分记录")
 
