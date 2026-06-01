@@ -114,19 +114,30 @@ with tab1:
 with tab2:
     st.subheader("历史记录")
     
-    # 添加评分阈值输入
-    min_rating = st.number_input(
-        "最低评分（1-10）",
-        min_value=1,
-        max_value=10,
-        value=7,      # 默认7分
-        step=1
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        min_rating = st.number_input("最低评分（1-10）", min_value=1, max_value=10, value=7, step=1)
+    with col2:
+        keyword_input = st.text_input("包含关键字（空格分隔）", placeholder="例如：面 鸡 沙拉")
     
     if st.button("🎲 随机推荐一个符合条件的餐食"):
+        keywords = [kw.strip().lower() for kw in keyword_input.split() if kw.strip()] if keyword_input else []
+        
+        # 先按评分过滤
         high_rated = [m for m in st.session_state.meals if m.get("rating", 0) >= min_rating]
-        if high_rated:
-            meal = random.choice(high_rated)
+        
+        # 再按关键字过滤
+        if keywords:
+            candidates = []
+            for m in high_rated:
+                foods = m.get("foods", [])
+                if any(any(kw in f["name"].lower() for f in foods) for kw in keywords):
+                    candidates.append(m)
+        else:
+            candidates = high_rated
+        
+        if candidates:
+            meal = random.choice(candidates)
             st.write(f"时间：{meal['time']}")
             st.write(f"评分：{meal['rating']}⭐")
             if meal.get('comment'):
@@ -140,7 +151,13 @@ with tab2:
             except:
                 st.info("图片无法显示")
         else:
-            st.info(f"暂无 {min_rating} 分及以上的历史记录")
+            tip = f"暂无评分 ≥ {min_rating}"
+            if keywords:
+                tip += f" 且包含 {', '.join(keywords)}"
+            tip += " 的记录"
+            st.info(tip)
+    
+    # 清空按钮保持不变...
     
     # 其余部分（清空按钮等）保持不变
 
