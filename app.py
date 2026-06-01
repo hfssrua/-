@@ -113,8 +113,18 @@ with tab1:
 
 with tab2:
     st.subheader("历史记录")
-    if st.button("🎲 随机推荐一个高分（≥7）餐食"):
-        high_rated = [m for m in st.session_state.meals if m.get("rating", 0) >= 7]
+    
+    # 添加评分阈值输入
+    min_rating = st.number_input(
+        "最低评分（1-10）",
+        min_value=1,
+        max_value=10,
+        value=7,      # 默认7分
+        step=1
+    )
+    
+    if st.button("🎲 随机推荐一个符合条件的餐食"):
+        high_rated = [m for m in st.session_state.meals if m.get("rating", 0) >= min_rating]
         if high_rated:
             meal = random.choice(high_rated)
             st.write(f"时间：{meal['time']}")
@@ -130,7 +140,9 @@ with tab2:
             except:
                 st.info("图片无法显示")
         else:
-            st.info("暂无高分记录")
+            st.info(f"暂无 {min_rating} 分及以上的历史记录")
+    
+    # 其余部分（清空按钮等）保持不变
 
     st.markdown("---")
     st.write(f"共 {len(st.session_state.meals)} 条记录")
