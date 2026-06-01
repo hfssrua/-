@@ -156,7 +156,25 @@ with tab2:
                 tip += f" 且包含 {', '.join(keywords)}"
             tip += " 的记录"
             st.info(tip)
-    
+        # 新增：显示所有记录开关
+    st.markdown("---")
+    show_all = st.checkbox("📋 显示所有记录")
+    if show_all:
+        if st.session_state.meals:
+            for i, meal in enumerate(reversed(st.session_state.meals)):  # 最新的在上
+                with st.expander(f"{meal['time']} - 评分 {meal.get('rating','-')}⭐"):
+                    st.write("**食物：**")
+                    for f in meal.get('foods', []):
+                        st.write(f"- {f['name']}: {f['calories']}千卡")
+                    if meal.get('comment'):
+                        st.write(f"**备注：** {meal['comment']}")
+                    try:
+                        img_bytes = base64.b64decode(meal['image'])
+                        st.image(img_bytes, width=200)
+                    except:
+                        pass
+        else:
+            st.info("暂无任何记录")
     # 清空按钮保持不变...
     
     # 其余部分（清空按钮等）保持不变
